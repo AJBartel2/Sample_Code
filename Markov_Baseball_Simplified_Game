@@ -1,0 +1,94 @@
+This is a simplified game of baseball, with only home plate and one base, modeled in GNU Octave. 
+
+*********************************************************************************************************
+### first we identify our variables and list what we need to create the matrix
+
+
+Avg = .225
+Hr = .039
+Bb = .114
+Adj = Avg-Hr
+Pb = Adj + Bb
+Phr = Hr
+Po = 1 - (Pb + Phr)
+numRuns = 5
+numBat = 5
+U = zeros(numBat,5)
+format long e
+
+### P is our transition matrix, and iState is where we identify our initial state matrix
+
+P = [Phr Pb Po 0 0; 
+     Phr Pb 0 Po 0; 
+     0 0 Phr Pb Po; 
+     0 0 Phr Pb Po; 
+     0 0  0   0  1]
+
+iState = [1 0 0 0 0]
+U(1,:) = iState
+
+### Each variable below identifies a matrix where 0, 1, or 2 runs score on a givin play, with P0 being no runs and so on. 
+
+P0 = [0 Pb Po 0 0; 
+      0  0  0 Po 0; 
+      0  0  0 Pb Po; 
+      0  0  0  0 Po; 
+      0  0  0  0 1];
+     
+P1 = [Phr 0 0 0 0; 
+      0  Pb 0 0 0; 
+      0  0 Phr 0 0; 
+      0  0 0 Pb 0; 
+      0  0 0 0  0];
+     
+P2 = [0 0 0 0 0; 
+     Phr 0 0 0 0; 
+     0 0 0 0 0; 
+     0 0 Phr 0 0; 
+     0 0 0 0 0];
+
+
+### This part of the code is a for loop where we change our matrix from "Probability we are in a givin state" to "Probability runs scored".
+
+
+for i = 1:numBat
+  iState*P^i
+  uTemp = U;
+  U(1,:) = uTemp(1,:)*P0;
+  U(2,:) = (uTemp(1,:)*P1) + (uTemp(2,:)*P0);
+  U(3,:) = (uTemp(1,:)*P2) + (uTemp(2,:)*P1) + (uTemp(3,:) *P0);
+  for j =4:numRuns
+    U(j,:) = (uTemp(j-2,:)*P2) + (uTemp(j-1,:)*P1) + (uTemp(j,:)*P0);
+  endfor
+  U
+ endfor
+  
+### This is where our final calculation occurs. The last row will be our results, and is read from top to bottom.
+  
+  iState*P^i
+******************************************************************************************************************************
+
+An example of results may be:
+
+ ans =
+
+ Column 1: 
+
+   5.150666133990000e-04  ---> Probability that 0 runs score 
+
+ Column 2:
+
+   3.962050872300000e-03  ---> Probability that 1 run scores
+
+ Column 3:
+
+   5.021519638005000e-03  ---> Probability that 2 runs score
+
+ Column 4:
+
+   3.862707413850000e-02  ---> Probability that 3 runs score
+
+ Column 5:
+
+   9.518742887377961e-01  ---> Probability that 4 runs score
+
