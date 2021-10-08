@@ -1,0 +1,194 @@
+This is the full game version of the simplified baseball game. There are 3 bases and homeplate, along with many more possible outcomes. 
+
+********************************************************************************************************************************
+### Unlike the simplified model, this one takes raw data from MLB.com and calculates our variables below. These are thing such as walk probability.
+### All data used is team data, not individual player data.
+
+Pa = 2316
+H = 523
+W = 243
+D = 97	
+T = 6
+Hr = 118
+
+Pw = W/Pa
+Ps = H/Pa 
+Ph = Hr/Pa
+Pd = D/Pa
+Pt = T/Pa
+Pb = Ps + Pw
+Po = 1 - (Pb + Ph + Pd + Pt)
+
+
+
+
+numRuns = 10
+numBat = 15
+U = zeros(numRuns,25)
+
+iState = zeros(1,25)
+  iState(1,1) = 1
+U(1,:) = iState
+
+### Below we identify our matricies. A and B make up chunks of a larger 25x25 matrix, with A being events that do not resul in outs.
+### B is events that result in outs. This format is outlined with the P variable using the A and B blocks.
+
+A = [Ph, Pb, Pd, Pt, 0,  0,  0, 0;
+     Ph,  0,  0, Pt, Pb, 0, Pd, 0;
+     Ph, Ps, Pd, Pt, Pw, 0,  0, 0;
+     Ph, Ps, Pd, Pt,  0, Pw, 0, 0;
+     Ph,  0,  0, Pt, Ps, 0, Pd, Pw;
+     Ph,  0,  0, Pt, Ps, 0, Pd, Pw;
+     Ph, Ps, Pd, Pt,  0, 0,  0, Pw;
+     Ph,  0,  0, Pt, Ps, 0, Pd, Pw]
+
+B = Po*eye(8)
+
+P = zeros(25, 25);
+P(1:8, 1:8) = A;
+P(1:8, 9:16) = B;
+P(9:16, 9:16) = A;
+P(9:16, 17:24) = B;
+P(17:24, 17:24) = A;
+P(17:24, 25) = Po;
+P(25,25) = 1;
+
+### As in the simplified model, P0, P1, P2, P3, and P4 are all plays when 0, 1, 2, 3 or 4 runs score based on the results of one at bat. 
+
+
+P0 = [0, Pb, Pd, Pt, 0,  0,  0, 0;
+      0,  0,  0,  0, Pb, 0, Pd, 0;
+      0,  0,  0,  0, Pw, 0,  0, 0;
+      0,  0,  0,  0,  0, Pw, 0, 0;
+      0,  0,  0,  0,  0, 0,  0, Pw;
+      0,  0,  0,  0,  0, 0,  0, Pw;
+      0,  0,  0,  0,  0, 0,  0, Pw;
+      0,  0,  0,  0,  0, 0,  0, 0];
+
+
+P1 = [Ph,  0,  0,  0,  0, 0,  0,  0;
+       0,  0,  0, Pt,  0, 0,  0,  0;
+       0, Ps, Pd, Pt,  0, 0,  0,  0;
+       0, Ps, Pd, Pt,  0, 0,  0,  0;
+       0,  0,  0,  0, Ps, 0, Pd,  0;
+       0,  0,  0,  0, Ps, 0, Pd,  0;
+       0,  0,  0,  0,  0, 0,  0,  0;
+       0,  0,  0,  0,  0, 0,  0, Pw];
+
+
+P2 = [ 0,  0,  0,  0, 0,  0,  0, 0;
+      Ph,  0,  0,  0,  0, 0,  0, 0;
+      Ph,  0,  0,  0,  0, 0,  0, 0;
+      Ph,  0,  0,  0,  0, 0,  0, 0;
+       0,  0,  0, Pt,  0, 0,  0, 0;
+       0,  0,  0, Pt,  0, 0,  0, 0;
+       0, Ps, Pd, Pt,  0, 0,  0, 0;
+       0,  0,  0,  0,  Ps, 0,Pd, 0];
+
+
+P3 = [0,  0,  0,  0, 0,  0,  0, 0;
+      0,  0,  0,  0, 0,  0,  0, 0;
+      0,  0,  0,  0, 0,  0,  0, 0;
+      0,  0,  0,  0, 0,  0,  0, 0;
+     Ph,  0,  0,  0, 0,  0,  0, 0;
+     Ph,  0,  0,  0, 0,  0,  0, 0;
+     Ph,  0,  0,  0,  0, 0,  0, 0;
+      0,  0,  0, Pt,  0, 0,  0, 0];
+
+
+P4 = [0,  0,  0,  0,  0, 0,  0, 0;
+      0,  0,  0,  0,  0, 0,  0, 0;
+      0,  0,  0,  0,  0, 0,  0, 0;
+      0,  0,  0,  0,  0, 0,  0, 0;
+      0,  0,  0,  0,  0, 0,  0, 0;
+      0,  0,  0,  0,  0, 0,  0, 0;
+      0,  0,  0,  0,  0, 0,  0, 0;
+     Ph,  0,  0,  0,  0, 0,  0, 0];
+     
+### Here we are copying combining the 25x25 matrix listed above with each P matrix. This is used in the following step to convert our results.   
+     
+     
+A0 = zeros(25, 25);
+A0(1:8, 1:8) = P0;
+A0(1:8, 9:16) = B;
+A0(9:16, 9:16) = P0;
+A0(9:16, 17:24) = B;
+A0(17:24, 17:24) = P0;
+A0(17:24, 25) = Po;
+A0(25,25) = 1;
+
+
+A1 = zeros(25, 25);
+A1(1:8, 1:8) = P1;
+A1(1:8, 9:16) = zeros;
+A1(9:16, 9:16) = P1;
+A1(9:16, 17:24) = zeros;
+A1(17:24, 17:24) = P1;
+
+
+
+A2 = zeros(25, 25);
+A2(1:8, 1:8) = P2;
+A2(1:8, 9:16) = zeros;
+A2(9:16, 9:16) = P2;
+A2(9:16, 17:24) = zeros;
+A2(17:24, 17:24) = P2;
+
+
+
+A3 = zeros(25, 25);
+A3(1:8, 1:8) = P3;
+A3(1:8, 9:16) = zeros;
+A3(9:16, 9:16) = P3;
+A3(9:16, 17:24) = zeros;
+A3(17:24, 17:24) = P3;
+
+
+
+A4 = zeros(25, 25);
+A4(1:8, 1:8) = P4;
+A4(1:8, 9:16) = zeros;
+A4(9:16, 9:16) = P4;
+A4(9:16, 17:24) = zeros;
+A4(17:24, 17:24) = P4;
+
+
+### This part of the code is a for loop where we change our matrix from "Probability we are in a givin state" to "Probability runs scored".
+
+
+for i = 1:numBat
+  iState*P^i
+  uTemp = U;
+  U(1,:) = (uTemp(1,:)*A0);
+  U(2,:) = (uTemp(1,:)*A1) + (uTemp(2,:)*A0);
+  U(3,:) = (uTemp(1,:)*A2) + (uTemp(2,:)*A1) + (uTemp(3,:)*A0);
+  U(4,:) = (uTemp(1,:)*A3) + (uTemp(2,:)*A2) + (uTemp(3,:)*A1) + (uTemp(4,:)*A0);
+  U(5,:) = (uTemp(1,:)*A4) + (uTemp(2,:)*A3) + (uTemp(3,:)*A2) + (uTemp(4,:)*A1) + (uTemp(5,:)*A0);
+  for j = 6:numRuns
+    j
+    U(j,:) = (uTemp(j-4,:)*A4) + (uTemp(j-3,:)*A3) + (uTemp(j-2,:)*A2) + (uTemp(j-1,:)*A1) + (uTemp(j,:)*A0);
+  endfor
+  U
+  sum(U(:,25))
+
+  
+ endfor
+ 
+ *****************************************************************************************************************************************************
+ 
+ 
+ Our results here read similar to the simplified game, however the probablilities are much different.
+ 
+   5.720262932737930e-01  --> Probability that no runs scored before 3 outs were recorded
+   1.590078462602366e-01  --> Probability that 1 run scored before 3 outs were recorded
+   1.096853647070738e-01  --> Probability that 2 runs scored before 3 outs were recorded
+   6.906257728582026e-02  --> Probability that 3 runs scored before 3 outs were recorded
+   4.084111034982643e-02  --> Probability that 4 runs scored before 3 outs were recorded
+   2.307592524198207e-02  --> Probability that 5 runs scored before 3 outs were recorded
+   1.259553495436578e-02  --> Probability that 6 runs scored before 3 outs were recorded
+   6.691461993859833e-03  --> Probability that 7 runs scored before 3 outs were recorded
+   3.478371345124897e-03  --> Probability that 8 runs scored before 3 outs were recorded
+   1.776115942998577e-03  --> Probability that 9 runs scored before 3 outs were recorded
+ 
+ 
+
