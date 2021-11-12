@@ -53,7 +53,8 @@ P(17:24, 17:24) = A;
 P(17:24, 25) = Po;
 P(25,25) = 1;
 
-### As in the simplified model, P0, P1, P2, P3, and P4 are all plays when 0, 1, 2, 3 or 4 runs score based on the results of one at bat. 
+### As in the simplified model, P0, P1, P2, P3, and P4 are all plays when 0, 1, 2, 3 or 4 runs score based on the results of one at bat. Each P is an 8x8 block, 
+the last column is a vector where we will store the results. This format leaves us with a 25x25 matrix in the end.
 
 
 P0 = [0, Pb, Pd, Pt, 0,  0,  0, 0;
